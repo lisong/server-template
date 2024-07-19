@@ -20,6 +20,8 @@ export const RedisCacheOptions: CacheModuleAsyncOptions = {
         host: configService.get<string>('REDIS_HOST'),
         port: configService.get<number>('REDIS_PORT'),
       },
+      username: configService.get<string>('REDIS_USER_NAME', null),
+      password: configService.get<string>('REDIS_USER_PASSWORD', null),
     });
     return {
       store: () => store,
@@ -39,6 +41,8 @@ export const RedlockOptions: ConfigurableModuleAsyncOptions<
       new Redis({
         host: configService.get<string>('REDIS_HOST'),
         port: configService.get<number>('REDIS_PORT'),
+        username: configService.get<string>('REDIS_USER_NAME', null),
+        password: configService.get<string>('REDIS_USER_PASSWORD', null),
       }),
     ],
     settings: {
