@@ -30,7 +30,7 @@ npm_package() {
   pwd
   yarn install
   yarn build
-  cp .env package.json ecosystem.config.js dist
+  cp package.json ecosystem.config.js dist
 }
 
 cp_file() {

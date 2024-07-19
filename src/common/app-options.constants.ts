@@ -77,6 +77,8 @@ export const CustomThrottlerAsyncOptions: ThrottlerAsyncOptions = {
     storage: new ThrottlerStorageRedisService({
       host: config.get<string>('REDIS_HOST'),
       port: config.get<number>('REDIS_PORT'),
+      username: config.get<string>('REDIS_USER_NAME', null),
+      password: config.get<string>('REDIS_USER_PASSWORD', null),
     }),
   }),
 };
