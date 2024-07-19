@@ -1,0 +1,131 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/@prisma/clientAuthDB"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("AUTH_DB_DATABASE_URL")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model AdminUser {
+  id                  BigInt    @id @default(autoincrement())
+  name                String    @unique(map: "AdminUser_UNIQUE") @default("") @db.VarChar(50)
+  password            String    @default("") @db.VarChar(200)
+  status              Int       @default(0) @db.TinyInt
+  login_attempts      Int       @default(0)
+  two_step_enabled    Int       @default(0) @db.TinyInt
+  two_step_opened_at  DateTime? @db.DateTime(0)
+  lock_until          DateTime? @db.DateTime(0)
+  two_step_attempts   Int       @default(0)
+  two_step_lock_until DateTime? @db.DateTime(0)
+  updated_at          DateTime  @default(now()) @db.DateTime(0)
+  created_at          DateTime  @default(now()) @db.DateTime(0)
+  password_changed_at DateTime? @db.DateTime(0)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model AdminUserRole {
+  id         BigInt   @id @default(autoincrement())
+  user_id    BigInt   @default(0)
+  role_id    BigInt   @default(0)
+  updated_at DateTime @default(now()) @db.DateTime(0)
+  created_at DateTime @default(now()) @db.DateTime(0)
+
+  @@unique([user_id, role_id], map: "AdminUserRole_user_id_IDX")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model AdminUserTwoStepAttempt {
+  id         BigInt   @id @default(autoincrement())
+  user_id    BigInt   @default(0)
+  method     Int      @default(0) @db.TinyInt
+  code       String   @default("") @db.VarChar(10)
+  status     Int      @default(0) @db.TinyInt
+  expires_at DateTime @default(now()) @db.DateTime(0)
+  updated_at DateTime @default(now()) @db.DateTime(0)
+  created_at DateTime @default(now()) @db.DateTime(0)
+
+  @@index([user_id, method], map: "idx_userid_method")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model AdminUserTwoStepSetting {
+  id               BigInt    @id @default(autoincrement())
+  user_id          BigInt    @default(0)
+  method           Int       @default(0) @db.TinyInt
+  secret           String    @default("") @db.VarChar(255)
+  draft_box_secret String    @default("") @db.VarChar(255)
+  enabled          Int       @default(0) @db.TinyInt
+  opened_at        DateTime? @db.DateTime(0)
+  updated_at       DateTime  @default(now()) @db.DateTime(0)
+  created_at       DateTime  @default(now()) @db.DateTime(0)
+
+  @@unique([user_id, method], map: "UNIQUE_userid_method")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model AdminUserTwoStepToken {
+  id         BigInt   @id @default(autoincrement())
+  user_id    BigInt   @unique(map: "UNIQUE_userid") @default(0)
+  token      String   @default("") @db.VarChar(255)
+  expires_at DateTime @default(now()) @db.DateTime(0)
+  updated_at DateTime @default(now()) @db.DateTime(0)
+  created_at DateTime @default(now()) @db.DateTime(0)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model AdminApiRouter {
+  id         BigInt   @id @default(autoincrement())
+  name       String   @default("") @db.VarChar(50)
+  method     String   @default("") @db.VarChar(20)
+  path       String   @default("") @db.VarChar(255)
+  status     Int      @default(0) @db.TinyInt
+  updated_at DateTime @default(now()) @db.DateTime(0)
+  created_at DateTime @default(now()) @db.DateTime(0)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model AdminMenu {
+  id         BigInt   @id @default(autoincrement())
+  name       String   @default("") @db.VarChar(50)
+  parent_id  BigInt   @default(0)
+  icon       String   @default("") @db.VarChar(255)
+  link       String   @default("") @db.VarChar(255)
+  rank       Int      @default(0)
+  status     Int      @default(0) @db.TinyInt
+  depth      Int      @default(0) @db.TinyInt
+  updated_at DateTime @default(now()) @db.DateTime(0)
+  created_at DateTime @default(now()) @db.DateTime(0)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model AdminMenuApiRouterBindMap {
+  id         BigInt   @id @default(autoincrement())
+  menu_id    BigInt   @default(0)
+  api_id     BigInt   @default(0)
+  updated_at DateTime @default(now()) @db.DateTime(0)
+  created_at DateTime @default(now()) @db.DateTime(0)
+
+  @@unique([menu_id, api_id], map: "AdminUserRole_user_id_IDX")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model AdminPermission {
+  id         BigInt   @id @default(autoincrement())
+  role_id    BigInt   @default(0)
+  menu_id    BigInt   @default(0)
+  updated_at DateTime @default(now()) @db.DateTime(0)
+  created_at DateTime @default(now()) @db.DateTime(0)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model AdminRole {
+  id          BigInt   @id @default(autoincrement())
+  name        String   @unique(map: "AdminRole_name_IDX") @default("") @db.VarChar(50)
+  description String   @default("") @db.VarChar(255)
+  status      Int      @default(0) @db.TinyInt
+  updated_at  DateTime @default(now()) @db.DateTime(0)
+  created_at  DateTime @default(now()) @db.DateTime(0)
+}
