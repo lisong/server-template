@@ -11,6 +11,7 @@ import {
 import { AdminUserService } from 'src/modules/admin-user/admin-user.service';
 import * as _ from 'lodash';
 import { AuthorityService } from './authority.service';
+import { RoleChangeDTO } from './role-change.dto';
 
 @Controller('admin/authority')
 export class AuthorityController {
@@ -26,7 +27,14 @@ export class AuthorityController {
       _.defaultTo(Number(params.page), 1),
       _.defaultTo(Number(params.pageSize), 20),
     );
-    return pagination;
+    const userIds = pagination.items.map((it) => BigInt(it.id));
+    const roleMap = await this.authorityService.getUserRole(userIds);
+    return {
+      ...pagination,
+      items: pagination.items.map((item) => {
+        return { ...item, role: roleMap[item.id] || [] };
+      }),
+    };
   }
 
   @Post('user/create')
@@ -71,8 +79,8 @@ export class AuthorityController {
 
   @Post('role/create')
   async roleCreate(@Request() req, @Body() params) {
-    if (!params.name || params.name.length < 4) {
-      throw new UnprocessableEntityException('角色名称至少4个字符');
+    if (!params.name || params.name.length < 2) {
+      throw new UnprocessableEntityException('角色名称至少2个字符');
     }
     const roleId = await this.authorityService.createRole(
       params.name,
@@ -82,7 +90,7 @@ export class AuthorityController {
   }
 
   @Post('role/change')
-  async roleChange(@Request() req, @Body() params) {
+  async roleChange(@Request() req, @Body() params: RoleChangeDTO) {
     const roleId = _.defaultTo(parseInt(params.roleId), 0);
     if (roleId <= 0) {
       throw new UnprocessableEntityException('角色ID必须是数字');
@@ -91,9 +99,6 @@ export class AuthorityController {
     if (!exist) {
       throw new UnprocessableEntityException('角色不存在');
     }
-    if (params.status) {
-      await this.authorityService.updateRoleStatus(exist.id, params.status);
-    }
-    return true;
+    return await this.authorityService.updateRole(exist.id, params);
   }
 }

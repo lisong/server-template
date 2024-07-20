@@ -16,12 +16,7 @@ export const RedisCacheOptions: CacheModuleAsyncOptions = {
   imports: [ConfigModule],
   useFactory: async (configService: ConfigService) => {
     const store = await redisStore({
-      socket: {
-        host: configService.get<string>('REDIS_HOST'),
-        port: configService.get<number>('REDIS_PORT'),
-      },
-      username: configService.get<string>('REDIS_USER_NAME', null),
-      password: configService.get<string>('REDIS_USER_PASSWORD', null),
+      url: configService.get<string>('REDIS_URL'),
     });
     return {
       store: () => store,
@@ -37,14 +32,7 @@ export const RedlockOptions: ConfigurableModuleAsyncOptions<
   imports: [ConfigModule],
   useFactory: async (configService: ConfigService) => ({
     // See https://github.com/mike-marcacci/node-redlock#configuration
-    clients: [
-      new Redis({
-        host: configService.get<string>('REDIS_HOST'),
-        port: configService.get<number>('REDIS_PORT'),
-        username: configService.get<string>('REDIS_USER_NAME', null),
-        password: configService.get<string>('REDIS_USER_PASSWORD', null),
-      }),
-    ],
+    clients: [new Redis(configService.get<string>('REDIS_URL'))],
     settings: {
       driftFactor: 0.01,
       retryCount: 1,
@@ -67,18 +55,15 @@ export const CustomConfigModuleOptions: ConfigModuleOptions = {
 export const CustomThrottlerAsyncOptions: ThrottlerAsyncOptions = {
   imports: [ConfigModule],
   inject: [ConfigService],
-  useFactory: (config: ConfigService) => ({
+  useFactory: (configService: ConfigService) => ({
     throttlers: [
       {
-        ttl: config.get('THROTTLE_TTL'),
-        limit: config.get('THROTTLE_LIMIT'),
+        ttl: configService.get('THROTTLE_TTL'),
+        limit: configService.get('THROTTLE_LIMIT'),
       },
     ],
-    storage: new ThrottlerStorageRedisService({
-      host: config.get<string>('REDIS_HOST'),
-      port: config.get<number>('REDIS_PORT'),
-      username: config.get<string>('REDIS_USER_NAME', null),
-      password: config.get<string>('REDIS_USER_PASSWORD', null),
-    }),
+    storage: new ThrottlerStorageRedisService(
+      configService.get<string>('REDIS_URL'),
+    ),
   }),
 };

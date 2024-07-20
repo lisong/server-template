@@ -98,7 +98,7 @@ export class MenuService {
   async getUserApiRouter(userId: bigint) {
     const menuIds = (await this.getUserMenu(userId)).map((it) => it.id);
     const apiIds = (await this.getAllMenuApiRouterBindMapFromCatch())
-      .filter((it) => menuIds.includes(it.api_id))
+      .filter((it) => menuIds.includes(it.menu_id))
       .map((it) => it.api_id);
     return (await this.getAllApiRouterFromCatch()).filter((it) =>
       apiIds.includes(it.id),

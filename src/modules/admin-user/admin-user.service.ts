@@ -64,7 +64,7 @@ export class AdminUserService {
         const { password, ...rs } = it;
         return {
           ...rs,
-          id: Number(it.id),
+          id: String(it.id),
         };
       }),
       page,
