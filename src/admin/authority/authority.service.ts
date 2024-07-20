@@ -64,7 +64,7 @@ export class AuthorityService {
     const addRoleIds = _.difference(roleIds, existRoleIds);
     if (deleteRoleIds.length > 0) {
       await this.prisma.adminUserRole.deleteMany({
-        where: { role_id: { in: deleteRoleIds } },
+        where: { user_id: userId, role_id: { in: deleteRoleIds } },
       });
     }
     if (addRoleIds.length > 0) {
