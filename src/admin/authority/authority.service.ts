@@ -43,6 +43,48 @@ export class AuthorityService {
     }
     return [];
   }
+
+  async changeUserRole(userId: bigint, roleIds: number[]) {
+    const roles = await this.prisma.adminRole.findMany({
+      where: { id: { in: roleIds } },
+    });
+    const errorRoleName = roles
+      .filter((it) => it.status !== 1)
+      .map((it) => it.name);
+    if (errorRoleName.length > 0) {
+      throw new UnprocessableEntityException(
+        `关联的角色已经删除:${errorRoleName.join(',')}`,
+      );
+    }
+    const allRoles = await this.prisma.adminUserRole.findMany({
+      where: { user_id: userId },
+    });
+    const existRoleIds = allRoles.map((it) => it.role_id);
+    const deleteRoleIds = _.difference(existRoleIds, roleIds);
+    const addRoleIds = _.difference(roleIds, existRoleIds);
+    if (deleteRoleIds.length > 0) {
+      await this.prisma.adminUserRole.deleteMany({
+        where: { role_id: { in: deleteRoleIds } },
+      });
+    }
+    if (addRoleIds.length > 0) {
+      const data = [];
+      for (const addRoleId of addRoleIds) {
+        data.push({
+          user_id: userId,
+          role_id: addRoleId,
+        });
+      }
+      await this.prisma.adminUserRole.createMany({
+        data: data,
+        skipDuplicates: true,
+      });
+    }
+    return roles.map((it) => {
+      return { role_id: String(it.id), name: it.name, status: it.status };
+    });
+  }
+
   async updateRole(roleId: bigint, params: any) {
     params = _.omitBy(params, _.isNull);
     params = _.omit(params, ['roleId']);
@@ -60,11 +102,12 @@ export class AuthorityService {
     return this.prisma.adminRole.findUnique({ where: { id: roleId } });
   }
 
-  async paginationRole(page: number, pageSize: number) {
+  async paginationRole(kw: string, page: number, pageSize: number) {
     const total = await this.prisma.adminRole.count();
     let items = [];
     if (total > 0) {
       items = await this.prisma.adminRole.findMany({
+        where: kw ? { name: { contains: kw } } : {},
         skip: (page - 1) * pageSize,
         take: pageSize,
         orderBy: { id: 'desc' },

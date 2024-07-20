@@ -52,6 +52,24 @@ export class AuthorityController {
     return Number(userId);
   }
 
+  @Post('user/role-change')
+  async userRoleChange(@Request() req, @Body() params) {
+    const userId = _.defaultTo(parseInt(params.userId), 0);
+    if (userId <= 0) {
+      throw new UnprocessableEntityException('用户id必须是数字');
+    }
+    const exist = await this.adminUserService.findById(userId);
+    if (!exist) {
+      throw new UnprocessableEntityException('用户不存在');
+    }
+    const roleIds =
+      params.roleIds
+        ?.map((it) => _.defaultTo(BigInt(it), 0))
+        .filter((it) => it > 0) || [];
+
+    return await this.authorityService.changeUserRole(userId, roleIds);
+  }
+
   @Post('user/change')
   async userChange(@Request() req, @Body() params) {
     const userId = _.defaultTo(parseInt(params.userId), 0);
@@ -68,9 +86,23 @@ export class AuthorityController {
     return true;
   }
 
+  @Post('user/reset-password')
+  async userResetPassword(@Request() req, @Body() params) {
+    const userId = _.defaultTo(parseInt(params.userId), 0);
+    if (userId <= 0) {
+      throw new UnprocessableEntityException('用户id必须是数字');
+    }
+    const exist = await this.adminUserService.findById(userId);
+    if (!exist) {
+      throw new UnprocessableEntityException('用户不存在');
+    }
+    return await this.adminUserService.resetUserPassword(exist.id);
+  }
+
   @Get('role/list')
   async roleList(@Request() req, @Query() params) {
     const pagination = await this.authorityService.paginationRole(
+      params.kw,
       _.defaultTo(Number(params.page), 1),
       _.defaultTo(Number(params.pageSize), 20),
     );

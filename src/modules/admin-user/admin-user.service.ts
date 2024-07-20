@@ -377,6 +377,21 @@ export class AdminUserService {
     });
   }
 
+  async resetUserPassword(userId: bigint) {
+    const password = await this.encryption.generatePassword();
+    const hash = await this.encryption.hashPassword(password);
+    await this.prisma.adminUser.update({
+      where: { id: userId },
+      data: {
+        password: hash,
+        password_changed_at: new Date(),
+        two_step_enabled: 2,
+        two_step_opened_at: null,
+      },
+    });
+    return password;
+  }
+
   async generateUserTwoStepToken(
     userId: bigint,
     expiredSeconds: number,
